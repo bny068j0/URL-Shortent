@@ -8,17 +8,27 @@ jobs:
   pr_review:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
       - name: Checkout code from different repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: bny068j0/PR_Review_Agent
           ref: main
           token: ${{ secrets.PAT_TOKEN }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Install dependencies
+        run: npm install
+
+      # - name: Install jq
+      #   run: sudo apt-get install -y jq
 
       - name: Run PR Review Agent
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-        run: ls -la
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        # run: echo '${{ toJSON(github.event.pull_request) }}' | jq
+        run: npx flue run pr_review --target node --input '{"owner":"${{ github.event.pull_request.base.repo.owner.login }}","repo":"${{ github.event.pull_request.base.repo.name }}","pullNumber":"${{ github.event.pull_request.number }}" }'
